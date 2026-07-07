@@ -13,6 +13,10 @@ app/.venv/
 __pycache__/
 *.pyc
 
+# Slides : on versionne le générateur (docs/slides/generate_slides.py),
+# PAS le binaire régénérable.
+*.pptx
+
 # Divers
 .env
 *.log
