@@ -13,9 +13,13 @@ app/.venv/
 __pycache__/
 *.pyc
 
-# Slides : on versionne le générateur (docs/slides/generate_slides.py),
-# PAS le binaire régénérable.
+# Slides & Word : on versionne les générateurs, PAS les binaires régénérables.
 *.pptx
+*.docx
+
+# QCM et corrigé : NE PAS publier dans le dépôt étudiant (contenu d'examen).
+evaluation/qcm.md
+evaluation/qcm-corrige.md
 
 # Divers
 .env

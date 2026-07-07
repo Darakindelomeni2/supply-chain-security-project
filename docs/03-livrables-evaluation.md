@@ -50,4 +50,4 @@ Cochez avant la soutenance — c'est aussi ce que l'encadrant regardera :
 
 - Soutenance : [`../evaluation/grille-soutenance.md`](../evaluation/grille-soutenance.md)
 - Rapport : [`../evaluation/grille-rapport.md`](../evaluation/grille-rapport.md)
-- QCM + corrigé : [`../evaluation/qcm.md`](../evaluation/qcm.md) · [`../evaluation/qcm-corrige.md`](../evaluation/qcm-corrige.md)
+- **QCM** : distribué par l'encadrant **le jour de l'épreuve** (non publié dans ce dépôt).
