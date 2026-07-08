@@ -196,6 +196,15 @@ webhook*. Quatre `ClusterPolicy` en **`validationFailureAction: Enforce`** (bloq
 | `verify-image-signature` | `verifyImages` | signature cosign valide de **notre** clé + `mutateDigest` |
 | `require-provenance-attestation` | `verifyImages` | attestation de provenance SLSA présente et valide |
 
+```bash
+kubectl get clusterpolicy
+# NAME                             ADMISSION   BACKGROUND   READY   MESSAGE
+# allowed-registries               true        true         True    Ready
+# disallow-latest-tag              true        true         True    Ready
+# require-provenance-attestation   true        false        True    Ready
+# verify-image-signature           true        false        True    Ready
+```
+
 **Registry privé (choix DevSecOps assumé).** Le package GHCR reste **privé** ; l'authentification
 se fait par `imagePullSecret` (namespace `app`, pour le kubelet) et `imageRegistryCredentials`
 (namespace `kyverno`, pour la vérification), avec un PAT dédié **`read:packages`** (moindre privilège).
@@ -217,7 +226,11 @@ La bascule `Audit → Enforce` est le passage du « on observe » au « on **blo
 n'exécute que ce qu'il peut **prouver** (signé par nous + provenance), tout le reste est rejeté
 (démonstration attaque/défense au §4).
 
-## 4. Démonstration attaque / défense (1 p.)
+## 4. Démonstration attaque / défense
+
+> 🖊️ **[À compléter — Ella, Lab 4]** — Pour chaque scénario du tableau : reproduire le rejet,
+> capturer le message Kyverno (`assets/lab4-*.png`) et coller la commande. Le contrôle de base
+> (image légitime **acceptée**) est déjà prouvé au §3.5.
 
 Tableau des scénarios (non signée, modifiée, registry, latest, sans provenance) + **captures**
 du refus Kyverno. Lien vers la capture vidéo.
@@ -269,14 +282,181 @@ infalsifiable) reste hors périmètre.
 signature **keyless** OIDC vérifiée par identité de workflow épinglée, et **attestation de scan**
 vérifiée à l'admission (bloquer aussi sur vulnérabilité, pas seulement sur signature).
 
-## 6. Reproductibilité (½ p.)
+## 6. Reproductibilité
 
-Étapes pour tout reconstruire de zéro (`kind create` → politiques → déploiement → démo).
+Reconstruction complète depuis un poste vierge. **Points d'attention critiques** signalés ⚠️.
 
-## 7. Bilan (½ p.)
+**0. Outils & accès** — installer docker, kind, kubectl, syft, grype, jq (commandes par OS dans
+[`docs/01-prerequis-setup.md`](../docs/01-prerequis-setup.md)). ⚠️ **Exception cosign** : épingler la
+**v2.4.1** (la doc installe `latest` = v3, incompatible Kyverno — cf. §5) :
 
-Ce que vous avez appris ; ce que vous feriez différemment ; répartition du travail dans le groupe.
+```bash
+curl -sSfLo ~/.local/bin/cosign \
+  https://github.com/sigstore/cosign/releases/download/v2.4.1/cosign-linux-amd64
+chmod +x ~/.local/bin/cosign && cosign version | grep GitVersion   # attendu : v2.4.1
+```
+
+**Accès GHCR** — deux PAT (GitHub → *Settings → Developer settings → Tokens (classic)*) :
+`write:packages` pour **pousser** l'image (`docker login ghcr.io`), et `read:packages`
+(moindre privilège) pour le **secret du cluster** (`$GHCR_RO`, étape 5).
+
+**1. Image** — `docker build ./app` → `docker push` → récupérer le **digest** (`$DIGEST`).
+
+**2. SBOM + scan** — SBOM **package-level** (⚠️ léger, sous la limite Kyverno) puis scan :
+
+```bash
+syft "$IMG:$TAG" -o spdx-json | jq 'del(.files, .relationships)' > sbom.spdx.json
+grype "$IMG:$TAG"        # gate .grype.yaml : casse sur CRITICAL corrigeable
+```
+
+**3. Signer + attester** (cosign v2, par digest) :
+
+```bash
+cosign sign   --key cosign.key "$DIGEST"
+cosign attest --key cosign.key --predicate sbom.spdx.json  --type spdxjson       "$DIGEST"
+cosign attest --key cosign.key --predicate provenance.json --type slsaprovenance "$DIGEST"
+```
+
+**4. Cluster + Kyverno** :
+
+```bash
+kind create cluster --name scs --config cluster/kind-config.yaml
+kubectl create -f https://github.com/kyverno/kyverno/releases/latest/download/install.yaml
+kubectl -n kyverno rollout status deploy/kyverno-admission-controller
+kubectl create namespace app
+```
+
+**5. Secrets registry privé** (PAT `read:packages`) dans les **deux** namespaces :
+
+```bash
+kubectl create secret docker-registry ghcr-creds -n app \
+  --docker-server=ghcr.io --docker-username=<user> --docker-password="$GHCR_RO"
+kubectl create secret docker-registry ghcr-creds -n kyverno \
+  --docker-server=ghcr.io --docker-username=<user> --docker-password="$GHCR_RO"
+```
+
+**6. Politiques** (avec `cosign.pub` + registry adaptés au fork) :
+
+```bash
+kubectl apply -f policies/kyverno/          # les 4 ClusterPolicy en Enforce
+kubectl get clusterpolicy                   # les 4 → READY=true
+```
+
+**7. Déployer** (image par digest ; `deployment.yaml` inclut `runAsUser: 10001` et le volume
+`emptyDir` sur `/tmp` — cf. §5) :
+
+```bash
+kubectl apply -n app -f k8s/deployment.yaml
+kubectl get pods -n app                      # Running = image signée + provenance acceptées
+```
+
+**Nettoyage** : `kind delete cluster --name scs`.
+
+## 7. Bilan
+
+**Ce que nous avons appris.** Sécuriser la chaîne d'approvisionnement, ce n'est pas ajouter un
+scan de plus : c'est **déplacer la confiance** vers une identité de build et la **vérifier à
+l'admission**. Trois distinctions structurantes se sont imposées en pratique : *origine* (signature)
+≠ *sûreté* (scan) ; *détecter* (Grype, au build) ≠ *empêcher* (Kyverno, au runtime) ; *tag* mutable
+≠ *digest* immuable. Le passage `Audit → Enforce` matérialise le « on ne fait pas confiance, on
+vérifie ».
+
+**Ce que nous referions autrement.** La leçon la plus marquante est venue d'un échec : la toolchain
+elle-même doit être **épinglée**. Installer cosign via `latest` (= v3, stockage OCI 1.1 referrers)
+a rendu les images non vérifiables par Kyverno pendant des heures — l'anti-pattern exact que le
+projet dénonce. On épinglerait **cosign v2** et on générerait un **SBOM package-level** dès le
+départ, et on testerait l'admission **tôt** (au lieu de tout signer avant de découvrir l'incompat).
+
+**Répartition du travail.**
+
+- **Valéry-Alexandre CAMUS** — Labs 0→3 (build, SBOM/scan, signature/attestations, cluster +
+  Kyverno + admission), résolution des incompatibilités de version, rapport §1-6.
+
+> 🖊️ **[À compléter — Ella MZOUGHI]** — Lab 4 (démo attaque/défense, §4) + Lab 5 (CI de bout en
+> bout), et ta contribution au rapport. *Ajoute ici tes tâches ; la traçabilité par membre se lit
+> aussi dans l'historique Git (chaque membre commite sa partie).*
 
 ## Annexes
 
-Commandes complètes, liens Rekor (si keyless), sorties brutes.
+### A. Preuves de transparence — Rekor
+
+Même signée **par clé**, chaque opération cosign v2 est inscrite dans le journal de transparence
+public **Rekor** (index `tlog`), consultables par tous :
+
+| Artefact | Index Rekor | Lien |
+| --- | --- | --- |
+| Signature image | `2118027833` | <https://search.sigstore.dev/?logIndex=2118027833> |
+| Attestation SBOM | `2118030651` | <https://search.sigstore.dev/?logIndex=2118030651> |
+| Attestation provenance | `2118032937` | <https://search.sigstore.dev/?logIndex=2118032937> |
+
+### B. Vérifications cosign (sorties brutes)
+
+```bash
+cosign verify --key cosign.pub "$DIGEST"
+
+Verification for ghcr.io/darakindelomeni2/scs-demo-app@sha256:691565737b2dc1bf1d3eecce28a04d8cdc6e467c0092aeeb74fade1cef95c719 --
+The following checks were performed on each of these signatures:
+  - The cosign claims were validated
+  - Existence of the claims in the transparency log was verified offline
+  - The signatures were verified against the specified public key
+
+[{"critical":{"identity":{"docker-reference":"ghcr.io/darakindelomeni2/scs-demo-app"},"image":{"docker-manifest-digest":"sha256:691565737b2dc1bf1d3eecce28a04d8cdc6e467c0092aeeb74fade1cef95c719"},"type":"cosign container image signature"},"optional":{"Bundle":{"SignedEntryTimestamp":"MEUCIEhTztz0MMBI8LLCQBUWZ1fyfPrHIFyjMQgJLn5cH4mUAiEArOtZUIvbhjwsN1ByY6pSJPHfQK2o5GhT0Q9r2r7iMLE=","Payload":{"body":"eyJhcGlWZXJzaW9uIjoiMC4wLjEiLCJraW5kIjoiaGFzaGVkcmVrb3JkIiwic3BlYyI6eyJkYXRhIjp7Imhhc2giOnsiYWxnb3JpdGhtIjoic2hhMjU2IiwidmFsdWUiOiI3YzlkNDhlMjkzODQ1ZWViNTFmMjI4NzE0NDYyYWI1M2RkNTk3OGI1ZDNjZTcyODNmY2U3ZjQ0MmZiYzc3MjQ1In19LCJzaWduYXR1cmUiOnsiY29udGVudCI6Ik1FVUNJRXg2L1Z5T1R5L2NmOERadmN2cW1QYjdvNGJTV0dQN1JXTHNtMUlseitSeUFpRUF5WkpvQ1hpYTdaM3NBeDZuMTlTRnZyQzk1RWtJZUUxZitWcVF0YUcxM21RPSIsInB1YmxpY0tleSI6eyJjb250ZW50IjoiTFMwdExTMUNSVWRKVGlCUVZVSk1TVU1nUzBWWkxTMHRMUzBLVFVacmQwVjNXVWhMYjFwSmVtb3dRMEZSV1VsTGIxcEplbW93UkVGUlkwUlJaMEZGYVRSdWMwSTFWMG96ZDJrMlNYRTNOWEF4UmxWTlFrNHhTVFJXYXdwMlMzbzFaRmR5VnpScVMxcEVUVUlyUlVoelVuSldSRlZtUkRKbE5IQkNiRnBZTkROTVNFVlpaa05XTVU5V2RYQnJlRVU0ZUN0TFoxaEJQVDBLTFMwdExTMUZUa1FnVUZWQ1RFbERJRXRGV1MwdExTMHRDZz09In19fX0=","integratedTime":1783529101,"logIndex":2118027833,"logID":"c0d23d6ad406973f9559f3ba2d1ca01f84147d8ffc5b8445c224f98b9591801d"}}}}]
+```
+
+```bash
+cosign verify-attestation --key cosign.pub --type spdxjson       "$DIGEST" | jq -r .payload | base64 -d | jq .predicateType
+
+Verification for ghcr.io/darakindelomeni2/scs-demo-app@sha256:691565737b2dc1bf1d3eecce28a04d8cdc6e467c0092aeeb74fade1cef95c719 --
+The following checks were performed on each of these signatures:
+  - The cosign claims were validated
+  - Existence of the claims in the transparency log was verified offline
+  - The signatures were verified against the specified public key
+"https://spdx.dev/Document"
+```
+
+```bash
+cosign verify-attestation --key cosign.pub --type slsaprovenance "$DIGEST" | jq -r .payload | base64 -d | jq .predicateType
+
+Verification for ghcr.io/darakindelomeni2/scs-demo-app@sha256:691565737b2dc1bf1d3eecce28a04d8cdc6e467c0092aeeb74fade1cef95c719 --
+The following checks were performed on each of these signatures:
+  - The cosign claims were validated
+  - Existence of the claims in the transparency log was verified offline
+  - The signatures were verified against the specified public key
+"https://slsa.dev/provenance/v0.2"
+```
+
+```bash
+cosign tree "$DIGEST"
+📦 Supply Chain Security Related artifacts for an image: ghcr.io/darakindelomeni2/scs-demo-app@sha256:691565737b2dc1bf1d3eecce28a04d8cdc6e467c0092aeeb74fade1cef95c719
+└── 💾 Attestations for an image tag: ghcr.io/darakindelomeni2/scs-demo-app:sha256-691565737b2dc1bf1d3eecce28a04d8cdc6e467c0092aeeb74fade1cef95c719.att
+   ├── 🍒 sha256:fcc4b58daf0ddb7bfe395425270d11575ec7d2f1f553e15f822643871e1eff48
+   └── 🍒 sha256:5d9f1b1f4248cc801090f5e5cc2baa1628561686f1690cae9ab3c4dc10219785
+└── 🔐 Signatures for an image tag: ghcr.io/darakindelomeni2/scs-demo-app:sha256-691565737b2dc1bf1d3eecce28a04d8cdc6e467c0092aeeb74fade1cef95c719.sig
+   └── 🍒 sha256:7c9d48e293845eeb51f228714462ab53dd5978b5d3ce7283fce7f442fbc77245
+```
+
+### C. Admission Kyverno (sorties brutes)
+
+> 🖊️ Coller : le **message de refus** Kyverno
+> preuve du blocage réel, ex. l'erreur d'admission `no signatures found`
+
+```bash
+kubectl get clusterpolicy
+NAME                             ADMISSION   BACKGROUND   READY   AGE    MESSAGE
+allowed-registries               true        true         True    135m   Ready
+disallow-latest-tag              true        true         True    135m   Ready
+require-provenance-attestation   true        false        True    135m   Ready
+verify-image-signature           true        false        True    135m   Ready
+```
+
+```bash
+kubectl get pods -n app
+NAME                           READY   STATUS    RESTARTS   AGE
+scs-demo-app-9f55cccc4-9r8vq   1/1     Running   0          42m
+scs-demo-app-9f55cccc4-sxfld   1/1     Running   0          42m
+```
+
+### D. Commandes complètes
+
+> Séquence reproductible complète : voir §6. Fichiers clés : `policies/kyverno/`, `k8s/deployment.yaml`,
+> `.grype.yaml`, `cosign.pub`.
