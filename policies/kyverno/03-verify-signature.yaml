@@ -5,7 +5,7 @@
 #   (A) mode PAR CLÉ    → collez votre cosign.pub (Lab 2)
 #   (B) mode KEYLESS    → exigez l'identité du workflow GitHub (Lab 5)  [décommentez]
 #
-# ➜ Adaptez "ghcr.io/<votre-user>/scs-demo-app" et la clé / l'identité.
+# ➜ Adaptez "ghcr.io/darakindelomeni2/scs-demo-app" et la clé / l'identité.
 apiVersion: kyverno.io/v1
 kind: ClusterPolicy
 metadata:
@@ -27,10 +27,13 @@ spec:
               kinds: [Pod]
       verifyImages:
         - imageReferences:
-            - "ghcr.io/<votre-user>/scs-demo-app*"
+            - "ghcr.io/darakindelomeni2/scs-demo-app*"
           mutateDigest: true          # réécrit le tag en digest (empêche la substitution)
           verifyDigest: true
           required: true
+          imageRegistryCredentials:
+            secrets:
+              - ghcr-creds        # secret registre privé (namespace kyverno)
           # ---- (A) VARIANTE PAR CLÉ ----
           attestors:
             - count: 1
@@ -38,7 +41,8 @@ spec:
                 - keys:
                     publicKeys: |-
                       -----BEGIN PUBLIC KEY-----
-                      COLLEZ_ICI_LE_CONTENU_DE_cosign.pub
+                      MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEi4nsB5WJ3wi6Iq75p1FUMBN1I4Vk
+                      vKz5dWrW4jKZDMB+EHsRrVDUfD2e4pBlZX43LHEYfCV1OVupkxE8x+KgXA==
                       -----END PUBLIC KEY-----
           # ---- (B) VARIANTE KEYLESS (Lab 5) : commentez le bloc 'keys' ci-dessus
           #          et décommentez le bloc 'keyless' ci-dessous ----
@@ -47,6 +51,6 @@ spec:
           #     entries:
           #       - keyless:
           #           issuer: "https://token.actions.githubusercontent.com"
-          #           subject: "https://github.com/<votre-user>/supply-chain-security-project/.github/workflows/supply-chain.yml@refs/heads/main"
+          #           subject: "https://github.com/darakindelomeni2/supply-chain-security-project/.github/workflows/supply-chain.yml@refs/heads/main"
           #           rekor:
           #             url: "https://rekor.sigstore.dev"

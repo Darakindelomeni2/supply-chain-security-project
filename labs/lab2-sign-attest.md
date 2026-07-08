@@ -110,10 +110,10 @@ Vous devez voir la **signature** (`.sig`) et les **attestations** (`.att`) ratta
 
 ## ✅ Critères de sortie du lab
 
-- [ ] `cosign.key` est dans `.gitignore` (jamais commité).
-- [ ] Image **signée** (par clé **et** keyless) et `cosign verify` réussit.
-- [ ] Attestation **SBOM** attachée et vérifiable.
-- [ ] Attestation de **provenance** attachée et vérifiable.
-- [ ] `cosign tree` montre signature + attestations sur le digest.
+- [x] `cosign.key` est dans `.gitignore` (jamais commité).
+- [x] Image **signée** (par clé **et** keyless) et `cosign verify` réussit.
+- [x] Attestation **SBOM** attachée et vérifiable.
+- [x] Attestation de **provenance** attachée et vérifiable.
+- [x] `cosign tree` montre signature + attestations sur le digest.
 
 ➡️ Suite : [`lab3-cluster-admission.md`](lab3-cluster-admission.md)

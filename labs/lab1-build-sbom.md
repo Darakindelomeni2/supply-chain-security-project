@@ -92,9 +92,9 @@ rapport les différences (base de données, SBOM natif, ergonomie).
 
 ## ✅ Critères de sortie du lab
 
-- [ ] `sbom.spdx.json` et/ou `sbom.cdx.json` générés.
-- [ ] Scan Grype fonctionnel, sévérités comprises.
-- [ ] Gate `--fail-on` opérationnelle (code de sortie ≠ 0 sur vuln).
-- [ ] Capture d'une chaîne **cassée** par une CVE, puis image saine rétablie.
+- [x] `sbom.spdx.json` et/ou `sbom.cdx.json` générés.
+- [x] Scan Grype fonctionnel, sévérités comprises.
+- [x] Gate `--fail-on` opérationnelle (code de sortie ≠ 0 sur vuln).
+- [x] Capture d'une chaîne **cassée** par une CVE, puis image saine rétablie.
 
 ➡️ Suite : [`lab2-sign-attest.md`](lab2-sign-attest.md)

@@ -66,9 +66,9 @@ toujours par digest**, jamais par tag mutable.
 
 ## ✅ Critères de sortie du lab
 
-- [ ] Tous les outils répondent.
-- [ ] `docker build` réussit et `/health` renvoie 200.
-- [ ] L'image est poussée sur `ghcr.io/<votre-user>/scs-demo-app`.
-- [ ] Vous savez récupérer le **digest** de l'image.
+- [x] Tous les outils répondent.
+- [x] `docker build` réussit et `/health` renvoie 200.
+- [x] L'image est poussée sur `ghcr.io/<votre-user>/scs-demo-app`.
+- [x] Vous savez récupérer le **digest** de l'image.
 
 ➡️ Suite : [`lab1-build-sbom.md`](lab1-build-sbom.md)

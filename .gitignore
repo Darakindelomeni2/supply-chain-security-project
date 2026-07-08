@@ -7,6 +7,8 @@ sbom*.json
 provenance.json
 *.att
 *.sig
+trivy*.json
+trivy*.txt
 
 # Python
 app/.venv/

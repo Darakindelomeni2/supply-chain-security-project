@@ -96,8 +96,8 @@ Si tout est en règle (signée + provenance + bon registry + par digest), **le p
 
 ## ✅ Critères de sortie du lab
 
-- [ ] Cluster `kind` up + Kyverno `Ready`.
-- [ ] Les 4 `ClusterPolicy` sont `Ready` et en `Enforce`.
-- [ ] Votre image **signée et conforme** est **acceptée** (pod Running).
+- [x] Cluster `kind` up + Kyverno `Ready`.
+- [x] Les 4 `ClusterPolicy` sont `Ready` et en `Enforce`.
+- [x] Votre image **signée et conforme** est **acceptée** (pod Running).
 
 ➡️ Suite : [`lab4-attaque-defense.md`](lab4-attaque-defense.md)
