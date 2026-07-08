@@ -3,7 +3,7 @@
 ## 1. Livrables attendus (par groupe, sauf QCM)
 
 | # | Livrable | Format | Où |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **L1** | **POC fonctionnel** : dépôt forké avec app, SBOM, signature, attestations, politiques Kyverno, manifs K8s | Repo GitHub (fork) | votre fork |
 | **L2** | **Rapport court** (5-8 pages) : ce que vous avez fait, comment vérifier, niveau SLSA atteint, limites | Markdown/PDF | `livrables/` |
 | **L3** | **Threat model** de la chaîne d'appro : attaques → contrôles → couverture | Markdown/PDF (1-3 p.) | `livrables/` |
@@ -17,7 +17,7 @@ et [`../livrables/TEMPLATE-threat-model.md`](../livrables/TEMPLATE-threat-model.
 ## 2. Barème global (100 %)
 
 | Composante | Poids | Évalue |
-|---|---|---|
+| --- | --- | --- |
 | **POC & démo** (L1 + L4 + L5-démo) | **35 %** | Ça marche, c'est reproductible, le blocage est *réel* |
 | **Soutenance** (L5) | **20 %** | Clarté, maîtrise, réponses aux questions |
 | **Rapport + threat model** (L2 + L3) | **25 %** | Rigueur, esprit critique, honnêteté sur les limites |

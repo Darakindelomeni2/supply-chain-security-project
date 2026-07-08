@@ -10,7 +10,7 @@ tout le code de départ ; votre travail consiste à le faire fonctionner, le com
 **personnaliser à votre fork** (remplacer les `<votre-user>`), pas à le réécrire.
 
 | Fourni ✅ (ne pas réécrire) | À produire / compléter par vous 🛠️ |
-|---|---|
+| --- | --- |
 | `app/` — API Flask + `Dockerfile` + tests (réutilisée du module précédent) | Le **SBOM**, le **scan**, la **signature**, les **attestations** (labs 1-2) |
 | `policies/kyverno/` — 4 politiques d'admission prêtes | Y coller **votre `cosign.pub`** / **votre identité keyless** + `<votre-user>` |
 | `k8s/deployment.yaml` — manifeste de déploiement | Y mettre **votre image par digest** |
@@ -26,7 +26,7 @@ tout le code de départ ; votre travail consiste à le faire fonctionner, le com
 Versions = minimum conseillé et testé ; des versions plus récentes conviennent en général.
 
 | Outil | Rôle dans le projet | Version min. | Vérifier |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **Docker Desktop** (ou Podman ≥ 4) | Construire et lancer les images | ≥ 24 | `docker version` |
 | **kind** (ou **k3s** ≥ 1.29 / minikube ≥ 1.32) | Cluster Kubernetes local jetable | ≥ 0.23 | `kind version` |
 | **kubectl** | Piloter le cluster | ≥ 1.29 | `kubectl version --client` |
@@ -111,6 +111,7 @@ echo "$GITHUB_TOKEN" | docker login ghcr.io -u <votre-user-github> --password-st
 ## 5. Encart — Voie Azure (optionnelle, licence Student)
 
 Pour les groupes qui veulent la variante cloud :
+
 - **Azure Container Registry (ACR)** au lieu de GHCR.
 - **AKS** au lieu de `kind`.
 - Kyverno s'installe **de la même façon** sur AKS (Helm). Les politiques sont **identiques**.

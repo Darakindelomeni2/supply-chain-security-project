@@ -8,7 +8,7 @@ et une **provenance SLSA**. À la fin, n'importe qui peut *vérifier* que l'imag
 ## 2.1 Deux modes de signature — comprendre le choix
 
 | Mode | Comment | Quand |
-|---|---|---|
+| --- | --- | --- |
 | **keyless** (recommandé) | Identité **OIDC** (GitHub/Google) via **Fulcio**, preuve dans **Rekor** | Idéal en CI, rien à gérer |
 | **par clé** | Paire de clés cosign (`cosign.key` / `cosign.pub`) | Utile en local hors ligne / démo simple |
 

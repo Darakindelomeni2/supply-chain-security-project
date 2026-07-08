@@ -24,3 +24,4 @@ evaluation/qcm-corrige.md
 # Divers
 .env
 *.log
+.vscode/

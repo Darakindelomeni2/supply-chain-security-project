@@ -28,10 +28,12 @@ kubectl run pirate --image="$DIGEST_UNSIGNED" -n app
 ```
 
 **Attendu :** la requête est **rejetée** par Kyverno :
-```
+
+```yaml
 Error from server: admission webhook "mutate.kyverno.svc-fail" denied the request:
 ... image is not signed ... failed to verify signature ...
 ```
+
 📸 **Capture 1.**
 
 ---
@@ -89,7 +91,7 @@ d'où elle vient**. 📸 **Capture 5.**
 ## Synthèse à mettre dans le rapport
 
 | Attaque | Contrôle qui bloque | Menace réelle correspondante |
-|---|---|---|
+| --- | --- | --- |
 | Image non signée | `verifyImages` (signature) | Déploiement d'artefact non autorisé |
 | Image modifiée après signature | signature liée au **digest** | **SolarWinds** (build/artefact altéré) |
 | Registry non autorisé | `validate` registres | Typosquatting / registry pirate |

@@ -7,7 +7,7 @@
 ## 🗓️ Jour 1 — Chaîne vérifiable : SBOM, scan, signature, attestations
 
 | Horaire | Activité |
-|---|---|
+| --- | --- |
 | 09:00–09:45 | **Présentation** du projet, contexte (SolarWinds, XZ…), objectifs, constitution des groupes |
 | 09:45–10:15 | Cours court **Supply chain & SLSA** — SBOM, provenance, Sigstore |
 | 10:15–11:00 | **Lab 0** — setup outils + fork + build de l'image (`lab0-setup.md`) |
@@ -21,7 +21,7 @@
 ## 🗓️ Jour 2 — Le cluster qui refuse l'inconnu + intégration (fin du projet à midi)
 
 | Horaire | Activité |
-|---|---|
+| --- | --- |
 | 09:00–09:30 | Cours court **Admission control & Kyverno** (`verifyImages`, `validate`) |
 | 09:30–11:00 | **Lab 3** — cluster `kind` + Kyverno : exiger signature, attestations, registry, pas de `:latest` |
 | 11:00–12:30 | **Lab 4** — **attaque/défense** : image non signée / modifiée ⇒ **rejetée** (captures pour la démo) |
@@ -34,7 +34,7 @@
 ## 🗓️ Jour 3 — QCM & Soutenances
 
 | Horaire | Activité |
-|---|---|
+| --- | --- |
 | 09:00–10:30 | Finalisation livrables + **répétition** de la démo (avec plan B enregistré) |
 | 10:30–11:00 | **QCM individuel** (25-30 min) 📝 — voir `evaluation/qcm.md` |
 | 11:00–12:30 | Marge / dépannage démo / dépôt final |

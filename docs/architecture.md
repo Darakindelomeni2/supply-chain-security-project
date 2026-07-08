@@ -2,7 +2,7 @@
 
 ## Vue d'ensemble
 
-```
+```yaml
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │  CHAÎNE DE BUILD (poste dev en local, ou GitHub Actions en CI)                 │
 │                                                                                │
@@ -63,7 +63,7 @@
 ## Correspondance avec SLSA
 
 | Brique du projet | Apporte |
-|---|---|
+| --- | --- |
 | Build sur GitHub Actions (Lab 5) | Build **hébergé** (pas sur un poste) → vers **SLSA L2** |
 | `cosign attest slsaprovenance` | **Provenance** signée → SLSA L1/L2 |
 | Signature keyless via OIDC | Identité **vérifiable et non réutilisable** |

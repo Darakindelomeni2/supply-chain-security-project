@@ -74,7 +74,7 @@ Déployez ce digest CI-signé sur le cluster ⇒ accepté. Poussez quoi que ce s
 ## Discussion pour le rapport : SLSA L2 vs L3
 
 | | Vous avez (L2-ish) | Il faudrait pour L3 |
-|---|---|---|
+| --- | --- | --- |
 | Build | Hébergé (GitHub Actions) | Build **isolé/éphémère** non contournable, paramètres non falsifiables |
 | Provenance | Signée par l'OIDC du runner | Générée par un **générateur isolé** (ex. `slsa-github-generator` en mode L3) |
 | Falsifiabilité | Un mainteneur avec droits peut altérer le workflow | Séparation stricte, revue obligatoire, provenance **infalsifiable** |

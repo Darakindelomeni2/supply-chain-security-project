@@ -25,7 +25,7 @@ est un référentiel de maturité. Il définit des **niveaux** de garantie sur l
 d'un artefact :
 
 | Niveau | Garantie principale | Ce que ça exige |
-|---|---|---|
+| --- | --- | --- |
 | **L1** | Provenance existe | Le build produit un enregistrement de *comment* l'artefact a été fait |
 | **L2** | Provenance signée + build hébergé | Build sur une plateforme (pas sur le poste d'un dev), provenance signée |
 | **L3** | Build renforcé & isolé | Isolation forte, provenance infalsifiable, non contournable |

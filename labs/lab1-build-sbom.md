@@ -68,7 +68,7 @@ echo "Code de sortie : $?"
 Pour *voir* la gate se déclencher, épinglez une dépendance vulnérable connue.
 Éditez `app/requirements.txt` et remplacez temporairement Flask par une **vieille version** :
 
-```
+```yaml
 Flask==2.0.1
 prometheus-client==0.20.0
 gunicorn==22.0.0
