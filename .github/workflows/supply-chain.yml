@@ -13,14 +13,18 @@ permissions:
   packages: write        # pousser sur GHCR
   id-token: write        # OIDC → signature keyless (Fulcio/Rekor)
 
-env:
-  IMAGE: ghcr.io/${{ github.repository_owner }}/scs-demo-app
-
 jobs:
   build-sign-attest:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Normalize image owner to lowercase
+        id: meta
+        run: |
+          OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          IMAGE="ghcr.io/${OWNER}/scs-demo-app"
+          echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -35,11 +39,11 @@ jobs:
         with:
           context: ./app
           push: true
-          tags: ${{ env.IMAGE }}:${{ github.sha }}
+          tags: ${{ steps.meta.outputs.image }}:${{ github.sha }}
 
       - name: Référence par digest
         id: ref
-        run: echo "ref=${{ env.IMAGE }}@${{ steps.build.outputs.digest }}" >> "$GITHUB_OUTPUT"
+        run: echo "ref=${{ steps.meta.outputs.image }}@${{ steps.build.outputs.digest }}" >> "$GITHUB_OUTPUT"
 
       # ---- SBOM ----
       - name: Install Syft
