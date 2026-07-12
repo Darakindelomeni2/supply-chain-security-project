@@ -205,6 +205,11 @@ kubectl get clusterpolicy
 # verify-image-signature           true        false        True    Ready
 ```
 
+La capture ci-dessous illustre la sortie attendue de la commande de vérification des
+`ClusterPolicy` déployés dans le cluster.
+
+![Sortie `kubectl get clusterpolicy` — politiques Kyverno actives](assets/lab4-clusterpolicy.png)
+
 **Registry privé (choix DevSecOps assumé).** Le package GHCR reste **privé** ; l'authentification
 se fait par `imagePullSecret` (namespace `app`, pour le kubelet) et `imageRegistryCredentials`
 (namespace `kyverno`, pour la vérification), avec un PAT dédié **`read:packages`** (moindre privilège).
@@ -228,20 +233,61 @@ n'exécute que ce qu'il peut **prouver** (signé par nous + provenance), tout le
 
 ## 4. Démonstration attaque / défense
 
-> 🖊️ **[À compléter — Ella, Lab 4]** — Pour chaque scénario du tableau : reproduire le rejet,
-> capturer le message Kyverno (`assets/lab4-*.png`) et coller la commande. Le contrôle de base
-> (image légitime **acceptée**) est déjà prouvé au §3.5.
+L’objectif de cette étape était de vérifier, sur un cluster kind, que les politiques d’admission
+Kyverno bloquent bien les artefacts non conformes avant leur exécution. Le cas nominal a d’abord
+été validé, puis plusieurs scénarios d’attaque ont été soumis au contrôle d’admission.
 
-Tableau des scénarios (non signée, modifiée, registry, latest, sans provenance) + **captures**
-du refus Kyverno. Lien vers la capture vidéo.
+### 4.1 Cas nominal — image signée et conforme
 
-| Scénario | Résultat | Contrôle déclenché | Preuve |
-| --- | --- | --- | --- |
-| Image légitime | ✅ acceptée | — | capture |
-| Non signée | ❌ refusée | verifyImages | capture |
-| Modifiée après signature | ❌ refusée | signature/digest | capture |
-| Registry non autorisé | ❌ refusée | allowed-registries | capture |
-| `:latest` | ❌ refusée | disallow-latest | capture |
+L’image signée, attestée et déployée par digest a été acceptée par le cluster. La capture ci-dessous montre les pods de l’application en état `Running`, ce qui confirme que
+l’assemblage “image signée + provenance + registry autorisé + digest” est bien admis.
+
+![Image signée et conforme acceptée par Kyverno — pods Running](assets/lab4-cas-nominal.png)
+
+### 4.2 Attaque — image non signée
+
+Une image non signée a ensuite été soumise au déploiement. La requête a été refusée à
+l’admission par Kyverno. La capture ci-dessous montre l’échec du contrôle de signature, attestant que l’intégrité
+cryptographique de l’image est vérifiée avant exécution.
+
+![Image non signée refusée par Kyverno](assets/lab4-non-signee.png)
+
+### 4.3 Attaque — image modifiée après signature
+
+Un scénario de type “tampered image” a été simulé en reconstruisant une image modifiée puis en
+la poussant sous le même tag. Le déploiement a été bloqué par Kyverno, comme illustré par la capture ci-dessous. Ce résultat
+démontre que le contrôle porte sur le digest exact de l’image et non sur un tag mutable.
+
+![Image modifiée après signature refusée par Kyverno](assets/lab4-tampered.png)
+
+### 4.4 Attaque — registry non autorisé
+
+Une image provenant d’un registre non autorisé a été refusée par les politiques de contrôle des
+registries. La capture ci-dessous illustre ce blocage, qui empêche l’usage d’images provenant d’une source
+non approuvée.
+
+![Image provenant d’un registry non autorisé refusée](assets/lab4-registry.png)
+
+### 4.5 Attaque — tag `:latest`
+
+Enfin, une image référencée avec le tag `:latest` a été rejetée. La capture ci-dessous confirme
+que la politique de disallow-latest bloque les déploiements sur des tags mutables.
+
+![Image avec tag `:latest` refusée](assets/lab4-latest.png)
+
+### 4.6 Synthèse des résultats
+
+| Scénario | Résultat observé | Preuve |
+| --- | --- | --- |
+| Image légitime | ✅ acceptée | [assets/lab4-cas-nominal.png](assets/lab4-cas-nominal.png) |
+| Image non signée | ❌ refusée | [assets/lab4-non-signee.png](assets/lab4-non-signee.png) |
+| Image modifiée après signature | ❌ refusée | [assets/lab4-tampered.png](assets/lab4-tampered.png) |
+| Registry non autorisé | ❌ refusée | [assets/lab4-registry.png](assets/lab4-registry.png) |
+| Tag `:latest` | ❌ refusée | [assets/lab4-latest.png](assets/lab4-latest.png) |
+
+Ces résultats montrent que le cluster n’exécute que les images qu’il peut prouver comme signées,
+attestées et conformes à la politique d’admission. La chaîne de confiance n’est donc plus seulement
+théorique : elle se traduit par un refus effectif des artefacts non vérifiables.
 
 ## 5. Positionnement SLSA & limites
 
@@ -338,7 +384,7 @@ kubectl create secret docker-registry ghcr-creds -n kyverno \
 **6. Politiques** (avec `cosign.pub` + registry adaptés au fork) :
 
 ```bash
-kubectl apply -f policies/kyverno/          # les 4 ClusterPolicy en Enforce
+kubectl apply -f policies/kyverno/          # les 4 objets ClusterPolicy en Enforce
 kubectl get clusterpolicy                   # les 4 → READY=true
 ```
 
