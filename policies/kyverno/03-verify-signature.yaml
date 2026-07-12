@@ -34,23 +34,22 @@ spec:
           imageRegistryCredentials:
             secrets:
               - ghcr-creds        # secret registre privé (namespace kyverno)
-          # ---- (A) VARIANTE PAR CLÉ ----
-          attestors:
-            - count: 1
-              entries:
-                - keys:
-                    publicKeys: |-
-                      -----BEGIN PUBLIC KEY-----
-                      MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEi4nsB5WJ3wi6Iq75p1FUMBN1I4Vk
-                      vKz5dWrW4jKZDMB+EHsRrVDUfD2e4pBlZX43LHEYfCV1OVupkxE8x+KgXA==
-                      -----END PUBLIC KEY-----
-          # ---- (B) VARIANTE KEYLESS (Lab 5) : commentez le bloc 'keys' ci-dessus
-          #          et décommentez le bloc 'keyless' ci-dessous ----
+          # ---- (A) VARIANTE PAR CLÉ (Lab 2/4) ----
           # attestors:
           #   - count: 1
           #     entries:
-          #       - keyless:
-          #           issuer: "https://token.actions.githubusercontent.com"
-          #           subject: "https://github.com/darakindelomeni2/supply-chain-security-project/.github/workflows/supply-chain.yml@refs/heads/main"
-          #           rekor:
-          #             url: "https://rekor.sigstore.dev"
+          #       - keys:
+          #           publicKeys: |-
+          #             -----BEGIN PUBLIC KEY-----
+          #             MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEi4nsB5WJ3wi6Iq75p1FUMBN1I4Vk
+          #             vKz5dWrW4jKZDMB+EHsRrVDUfD2e4pBlZX43LHEYfCV1OVupkxE8x+KgXA==
+          #             -----END PUBLIC KEY-----
+          # ---- (B) VARIANTE KEYLESS (Lab 5) ----
+          attestors:
+            - count: 1
+              entries:
+                - keyless:
+                    issuer: "https://token.actions.githubusercontent.com"
+                    subject: "https://github.com/darakindelomeni2/supply-chain-security-project/.github/workflows/supply-chain.yml@refs/heads/main"
+                    rekor:
+                      url: "https://rekor.sigstore.dev"
