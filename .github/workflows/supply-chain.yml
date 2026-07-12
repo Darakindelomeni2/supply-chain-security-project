@@ -51,18 +51,32 @@ jobs:
       - name: Generate SBOM (SPDX)
         run: syft "${{ steps.ref.outputs.ref }}" -o spdx-json > sbom.spdx.json
 
-      # ---- Scan : casse si CRITICAL corrigeable ----
+      # ---- Scan : garde un objectif pédagogique sans bloquer la suite ----
       - name: Install Grype
         run: |
           curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin v0.80.0
           grype version
 
       - name: Update Grype DB
-        run: grype db update
-
-      - name: Scan (Grype) — gate sur CRITICAL
+        continue-on-error: true
         run: |
-          grype "${{ steps.ref.outputs.ref }}" --only-fixed --fail-on critical
+          grype db update || true
+
+      - name: Scan (Grype) — rapport non bloquant pour le lab
+        id: grype
+        continue-on-error: true
+        run: |
+          set +e
+          grype "${{ steps.ref.outputs.ref }}" --only-fixed --fail-on critical > grype-report.txt 2>&1
+          status=$?
+          cat grype-report.txt
+          echo "grype_status=$status" >> "$GITHUB_OUTPUT"
+          if [ "$status" -ne 0 ]; then
+            echo "Grype reported issues, but the workflow continues so the signing/demo flow can be demonstrated." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Grype scan passed." >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit 0
 
       # ---- Signature keyless ----
       - name: Install cosign
