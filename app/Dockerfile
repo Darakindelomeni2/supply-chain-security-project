@@ -2,23 +2,33 @@
 # ---- Image multi-stage : petite, reproductible, non-root ----
 
 # 1) Étape build : installe les dépendances dans un venv isolé
-FROM python:3.12-slim AS builder
+FROM python:3.14-slim AS builder
 WORKDIR /app
 ENV PIP_NO_CACHE_DIR=1 PYTHONDONTWRITEBYTECODE=1
 COPY requirements.txt .
-RUN python -m venv /opt/venv \
- && /opt/venv/bin/pip install --upgrade pip \
+RUN export DEBIAN_FRONTEND=noninteractive \
+ && apt-get update \
+ && apt-get upgrade -y --no-install-recommends \
+ && apt-get install -y --no-install-recommends ca-certificates \
+ && rm -rf /var/lib/apt/lists/* \
+ && python -m venv /opt/venv \
+ && /opt/venv/bin/pip install --upgrade "pip>=25.3" \
  && /opt/venv/bin/pip install -r requirements.txt
 
 # 2) Étape runtime : image finale minimale
-FROM python:3.12-slim AS runtime
+FROM python:3.14-slim AS runtime
 ENV PATH="/opt/venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
     PORT=8080 \
     APP_VERSION=1.0.0
 
 # Utilisateur non-root (bonne pratique sécurité)
-RUN useradd --create-home --uid 10001 appuser
+RUN export DEBIAN_FRONTEND=noninteractive \
+ && apt-get update \
+ && apt-get upgrade -y --no-install-recommends \
+ && apt-get install -y --no-install-recommends curl \
+ && rm -rf /var/lib/apt/lists/* \
+ && useradd --create-home --uid 10001 appuser
 WORKDIR /app
 COPY --from=builder /opt/venv /opt/venv
 COPY app.py .
