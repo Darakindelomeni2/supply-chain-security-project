@@ -28,12 +28,12 @@ spec:
       verifyImages:
         - imageReferences:
             - "ghcr.io/darakindelomeni2/scs-demo-app*"
-          mutateDigest: true          # réécrit le tag en digest (empêche la substitution)
+          mutateDigest: true # réécrit le tag en digest (empêche la substitution)
           verifyDigest: true
           required: true
           imageRegistryCredentials:
             secrets:
-              - ghcr-creds        # secret registre privé (namespace kyverno)
+              - ghcr-creds # secret registre privé (namespace kyverno)
           # ---- (A) VARIANTE PAR CLÉ (Lab 2/4) ----
           # attestors:
           #   - count: 1
@@ -50,6 +50,6 @@ spec:
               entries:
                 - keyless:
                     issuer: "https://token.actions.githubusercontent.com"
-                    subject: "https://github.com/darakindelomeni2/supply-chain-security-project/.github/workflows/supply-chain.yml@refs/heads/main"
+                    subject: "https://github.com/Darakindelomeni2/supply-chain-security-project/.github/workflows/supply-chain.yml@refs/heads/main"
                     rekor:
                       url: "https://rekor.sigstore.dev"
