@@ -52,13 +52,17 @@ jobs:
         run: syft "${{ steps.ref.outputs.ref }}" -o spdx-json > sbom.spdx.json
 
       # ---- Scan : casse si CRITICAL corrigeable ----
+      - name: Install Grype
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin v0.80.0
+          grype version
+
+      - name: Update Grype DB
+        run: grype db update
+
       - name: Scan (Grype) — gate sur CRITICAL
-        uses: anchore/scan-action@v4
-        with:
-          image: ${{ steps.ref.outputs.ref }}
-          fail-build: true
-          severity-cutoff: critical
-          only-fixed: true
+        run: |
+          grype "${{ steps.ref.outputs.ref }}" --only-fixed --fail-on critical
 
       # ---- Signature keyless ----
       - name: Install cosign
